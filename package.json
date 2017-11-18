@@ -1,0 +1,21 @@
+{
+  "name": "neeo-homeassistant",
+  "version": "0.1.0",
+  "description": "A Home Assistant integration for NEEO",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jake Blatchford",
+  "license": "GPL-3.0",
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "dotenv": "^4.0.0",
+    "neeo-sdk": "^0.47.8",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2"
+  }
+}
