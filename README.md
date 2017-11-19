@@ -11,9 +11,11 @@ A Home Assistant integration for NEEO.
 
 ## Setup
 
-Copy `.env.example` to `.env` and set the options. API Key/Password is not yet supported.
+Copy `.env.example` to `.env` and set the options. URL should not have a trailing slash.
 
 Run `npm install` to install dependencies.
+
+Run with `node index.js`
 
 ## Known Issues
 

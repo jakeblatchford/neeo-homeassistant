@@ -24,16 +24,30 @@ const SUPPORTED_ENTITY_TYPES = 'light|switch|scene';
 class HAService {
   constructor(deviceState) {
     // Check env is set
-    if(!process.env.URL) {
-      console.error('ERROR! ENV is not set');
-      process.exit(1);  
+    if (!process.env.HA_URL) {
+      console.error('ERROR! ENV is not setup, no HA_URL');
+      process.exit(1);
     }
 
-    console.log('Home Assistant service started for URL: ' + process.env.URL);
+    console.log('Home Assistant service started for URL: ' + process.env.HA_URL);
 
     this.deviceState = deviceState;
     debug('starting service discovery');
     this.discoverDevices();
+  }
+
+  /**
+   * Default set of options to use for requests
+   */
+  getDefaultRequestOptions() {
+    let defaultOptions = {};
+
+    // Add password header if required
+    if (process.env.HA_PASSWORD) {
+      defaultOptions = Object.assign({}, defaultOptions, { headers: { 'x-ha-access': process.env.HA_PASSWORD } });
+    }
+
+    return defaultOptions;
   }
 
   /**
@@ -45,14 +59,17 @@ class HAService {
    */
   callService(entity_id, service, action) {
     console.log('calling service', service, 'on entity', entity_id, 'with action', action);
-    var options = {
+
+    let options = Object.assign({}, this.getDefaultRequestOptions(), {
       method: 'POST',
-      uri: process.env.URL + '/api/services/' + service + '/' + action,
+      uri: process.env.HA_URL + '/api/services/' + service + '/' + action,
       body: {
         entity_id: entity_id
       },
       json: true
-    };
+    });
+
+    console.log("Using options", options);
 
     rp(options)
       .then(function (parsedBody) {
@@ -80,10 +97,10 @@ class HAService {
 
     function getStatePromise() {
 
-      var options = {
-        uri: process.env.URL + '/api/states/' + entity_id,
+      let options = Object.assign({}, this.getDefaultRequestOptions(), {
+        uri: process.env.HA_URL + '/api/states/' + entity_id,
         json: true
-      };
+      });
 
       return rp(options).then(function (response) {
         console.log('returning promise with state', response);
@@ -107,10 +124,10 @@ class HAService {
    * Discover Home Assistant entities
    */
   discoverDevices() {
-    var options = {
-      uri:  process.env.URL + '/api/states',
+    let options = Object.assign({}, this.getDefaultRequestOptions(), {
+      uri: process.env.HA_URL + '/api/states',
       json: true
-    };
+    });
 
     rp(options)
       .then(function (parsedBody) {
@@ -118,14 +135,14 @@ class HAService {
         parsedBody.forEach(function (e) {
           // Check if valid type
           const validTypeRegex = '^(' + SUPPORTED_ENTITY_TYPES + ')\\..*$';
-          
+
           let typeSearch = String(e.entity_id).match(new RegExp(validTypeRegex))
           if (typeSearch) {
             // give a friendly name
             let friendlyName = e.attributes.friendly_name;
 
             console.log('discover found: ' + e.entity_id);
-            if (typeof friendlyName === undefined) { friendlyName = e.entity_id};
+            if (typeof friendlyName === undefined) { friendlyName = e.entity_id };
             this.deviceState.addDevice(e.entity_id, { friendlyName: friendlyName, type: typeSearch[1] }, true);
           }
         }, this);
