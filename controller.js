@@ -9,6 +9,7 @@ const deviceState = neeoapi.buildDeviceState();
 const MACRO_POWER_ON = 'POWER ON';
 const MACRO_POWER_OFF = 'POWER OFF';
 const MACRO_POWER_TOGGLE = 'POWER_TOGGLE';
+const MACRO_ACTIVATE_SCENE = 'ACTIVATE_SCENE';
 
 let haService;
 let updateCallbackReference, markDeviceOn, markDeviceOff;
@@ -17,8 +18,11 @@ let updateCallbackReference, markDeviceOn, markDeviceOff;
  * Setup service
  */
 module.exports.initialise = function () {
-  console.log('initialise Home Assistant service');
-  haService = new HAService(deviceState);
+  // check if already setup
+  if(!haService) {
+    console.log('initialise Home Assistant service');
+    haService = new HAService(deviceState);
+  }
 };
 
 /**
@@ -54,6 +58,9 @@ module.exports.onButtonPressed = (action, deviceId) => {
     case MACRO_POWER_TOGGLE:
       debug(`Power toggle ${deviceId}`);
       return toggleDevice(deviceId);
+    case MACRO_ACTIVATE_SCENE:
+      debug(`Activate scene ${deviceId}`);
+      return activateScene(deviceId);
     default:
       debug(`Unsupported button: ${action} for ${deviceId}`);
       return Promise.resolve(false);
@@ -64,8 +71,8 @@ module.exports.onButtonPressed = (action, deviceId) => {
  * Callbacks used by the power switch
  */
 module.exports.powerSwitchCallback = {
-  setter: setBrightnessState,
-  getter: getBrightnessState,
+  setter: setPowerState,
+  getter: getPowerState,
 };
 
 /**
@@ -74,36 +81,55 @@ module.exports.powerSwitchCallback = {
  * @param {*} deviceId 
  */
 function toggleDevice(deviceId) {
-  return haService.callService(deviceId, 'light', 'toggle');
+   return haService.callService(deviceId, getDeviceType(deviceId), 'toggle');
 }
 
 /**
- * Set brightness (only on/off)
- * TODO: actually set the brightness
+ * Activate scene
+ * 
+ * @param {*} deviceId 
+ */
+function activateScene(deviceId) {
+  return haService.callService(deviceId, 'scene', 'turn_on');
+}
+
+/**
+ * Set power state (on/off)
  * 
  * @param {*} deviceId 
  * @param {*} value 
  */
-function setBrightnessState(deviceId, value) {
-  console.log('set brightness - ', deviceId, value);
+function setPowerState(deviceId, value) {
+  console.log('set power state - ', deviceId, value);
   // this is sometimes a string and sometimes not...
   if (value === "false" | value == false) {
-    return haService.callService(deviceId, 'light', 'turn_off');
+    return haService.callService(deviceId, getDeviceType(deviceId), 'turn_off');
     markDeviceOff(deviceId);
   } else {
-    return haService.callService(deviceId, 'light', 'turn_on');
+    return haService.callService(deviceId, getDeviceType(deviceId), 'turn_on');
     markDeviceOn(deviceId);
   }
 }
 
 /**
- * Get brightness of device
+ * Get power state of device
  * 
  * @param {*} deviceId 
  */
-function getBrightnessState(deviceId) {
-  console.log('get brightness - ', deviceId);
+function getPowerState(deviceId) {
+  console.log('get power state - ', deviceId);
   return haService.getState(deviceId);
+}
+
+function getDeviceType(deviceId) {
+    // check device type before calling service
+    const device = deviceState.getClientObjectIfReachable(deviceId);
+  
+    if (device) {
+      return device.type;
+    } else {
+      return null;
+    }
 }
 
 /**
@@ -115,6 +141,22 @@ module.exports.discoverLights = function () {
 };
 
 /**
+ * Run a discovery of switches
+ */
+module.exports.discoverSwitches = function () {
+  console.log("discover call - switch");
+  return discover('switch');
+};
+
+/**
+ * Run a discovery of scenes
+ */
+module.exports.discoverScenes = function () {
+  console.log("discover call - scene");
+  return discover('scene');
+};
+
+/**
  * Run a discovery
  * 
  * @param {*} type 
@@ -122,7 +164,14 @@ module.exports.discoverLights = function () {
 function discover(type) {
   const allDevices = deviceState.getAllDevices();
 
-  const typeDevices = allDevices;
+  // filter to specified device type
+  //const validTypeRegex = '^(' + type + ')\\..*$';
+  const typeDevices = allDevices.filter(function (el) {
+    if (el.clientObject.type == type) {
+      return true;
+    }
+    return false;
+  });
 
   return typeDevices
     .map((deviceEntry) => {

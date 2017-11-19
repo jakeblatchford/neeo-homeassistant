@@ -12,13 +12,13 @@ const powerSwitch = {
 };
 
 const POWER_TOGGLE_BUTTON = { name: 'POWER_TOGGLE', label: 'Power Toggle' };
+const ACTIVATE_SCENE_BUTTON = { name: 'ACTIVATE_SCENE', label: 'Activate Scene'};
 
-const customLightDevice = neeoapi.buildDevice('Light')
+const haLightDevice = neeoapi.buildDevice('Light')
   .setManufacturer('Home Assistant')
   .addAdditionalSearchToken('ha')
   .addAdditionalSearchToken('dev')
   .setType('LIGHT')
-  .addButtonGroup('Power')
   .addButton(POWER_TOGGLE_BUTTON)
   .addSwitch(powerSwitch, controller.powerSwitchCallback)
   .addButtonHandler(controller.onButtonPressed)
@@ -29,13 +29,42 @@ const customLightDevice = neeoapi.buildDevice('Light')
   .registerInitialiseFunction(controller.initialise)
   .registerSubscriptionFunction(controller.registerSubscriptionCallback);
 
+  const haSwitchDevice = neeoapi.buildDevice('Switch')
+  .setManufacturer('Home Assistant')
+  .addAdditionalSearchToken('ha')
+  .addAdditionalSearchToken('dev')
+  .setType('ACCESSOIRE')
+  .addButtonGroup('Power')
+  .addButton(POWER_TOGGLE_BUTTON)
+  .addSwitch(powerSwitch, controller.powerSwitchCallback)
+  .addButtonHandler(controller.onButtonPressed)
+  .enableDiscovery({
+    headerText: 'Discover Home Assistant Switches',
+    description: 'Select the switch to add on the next screen.'
+  }, controller.discoverSwitches)
+  .registerInitialiseFunction(controller.initialise)
+  .registerSubscriptionFunction(controller.registerSubscriptionCallback);
+
+  const haSceneDevice = neeoapi.buildDevice('Scene')
+  .setManufacturer('Home Assistant')
+  .addAdditionalSearchToken('ha')
+  .addAdditionalSearchToken('dev')
+  .setType('ACCESSOIRE')
+  .addButton(ACTIVATE_SCENE_BUTTON)
+  .addButtonHandler(controller.onButtonPressed)
+  .enableDiscovery({
+    headerText: 'Discover Home Assistant Scenes',
+    description: 'Select the scene to add on the next screen.'
+  }, controller.discoverScenes)
+  .registerInitialiseFunction(controller.initialise);
+
 function startSdkExample(brain) {
   console.log('- Start server');
   neeoapi.startServer({
     brain,
     port: 6336,
     name: 'homeassistant',
-    devices: [customLightDevice]
+    devices: [haLightDevice, haSwitchDevice, haSceneDevice]
   })
     .then(() => {
       console.log('# READY! use the NEEO app to search for "Home Assistant".');

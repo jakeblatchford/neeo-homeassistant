@@ -16,7 +16,7 @@ require('dotenv').load();
  *      light
  *      light|scene
  */
-const SUPPORTED_ENTITY_TYPES = 'light';
+const SUPPORTED_ENTITY_TYPES = 'light|switch|scene';
 
 /**
  * Home Assistant Service
@@ -71,10 +71,10 @@ class HAService {
   getState(entity_id) {
     console.log('getting state of', entity_id);
 
-    // Check if light is reachable
-    const light = this.deviceState.getClientObjectIfReachable(entity_id);
-    console.log('The object is', light);
-    if (!light) {
+    // Check if device is reachable
+    const device = this.deviceState.getClientObjectIfReachable(entity_id);
+    console.log('The object is', device);
+    if (!device) {
       return BluePromise.reject(new Error('NOT_REACHABLE' + entity_id));
     }
 
@@ -118,13 +118,15 @@ class HAService {
         parsedBody.forEach(function (e) {
           // Check if valid type
           const validTypeRegex = '^(' + SUPPORTED_ENTITY_TYPES + ')\\..*$';
-          if (String(e.entity_id).match(new RegExp(validTypeRegex, 'g'))) {
+          
+          let typeSearch = String(e.entity_id).match(new RegExp(validTypeRegex))
+          if (typeSearch) {
             // give a friendly name
             let friendlyName = e.attributes.friendly_name;
 
             console.log('discover found: ' + e.entity_id);
-            if (typeof friendlyName === undefined) { friendlyName = e.entity_id };
-            this.deviceState.addDevice(e.entity_id, { friendlyName: friendlyName }, true);
+            if (typeof friendlyName === undefined) { friendlyName = e.entity_id};
+            this.deviceState.addDevice(e.entity_id, { friendlyName: friendlyName, type: typeSearch[1] }, true);
           }
         }, this);
       }.bind(this)).catch(function (err) {
