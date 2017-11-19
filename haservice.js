@@ -37,20 +37,6 @@ class HAService {
   }
 
   /**
-   * Default set of options to use for requests
-   */
-  getDefaultRequestOptions() {
-    let defaultOptions = {};
-
-    // Add password header if required
-    if (process.env.HA_PASSWORD) {
-      defaultOptions = Object.assign({}, defaultOptions, { headers: { 'x-ha-access': process.env.HA_PASSWORD } });
-    }
-
-    return defaultOptions;
-  }
-
-  /**
    * Call a Home Assistant service through the REST API
    * 
    * @param {*} entity_id 
@@ -60,14 +46,15 @@ class HAService {
   callService(entity_id, service, action) {
     console.log('calling service', service, 'on entity', entity_id, 'with action', action);
 
-    let options = Object.assign({}, this.getDefaultRequestOptions(), {
+    let options = {
       method: 'POST',
       uri: process.env.HA_URL + '/api/services/' + service + '/' + action,
       body: {
         entity_id: entity_id
       },
-      json: true
-    });
+      json: true,
+      headers: { 'x-ha-access': process.env.HA_PASSWORD }
+    };
 
     console.log("Using options", options);
 
@@ -97,10 +84,11 @@ class HAService {
 
     function getStatePromise() {
 
-      let options = Object.assign({}, this.getDefaultRequestOptions(), {
+      let options = {
         uri: process.env.HA_URL + '/api/states/' + entity_id,
-        json: true
-      });
+        json: true,
+        headers: { 'x-ha-access': process.env.HA_PASSWORD }
+      };
 
       return rp(options).then(function (response) {
         console.log('returning promise with state', response);
@@ -124,10 +112,11 @@ class HAService {
    * Discover Home Assistant entities
    */
   discoverDevices() {
-    let options = Object.assign({}, this.getDefaultRequestOptions(), {
+    let options = {
       uri: process.env.HA_URL + '/api/states',
-      json: true
-    });
+      json: true,
+      headers: { 'x-ha-access': process.env.HA_PASSWORD }
+    };
 
     rp(options)
       .then(function (parsedBody) {
