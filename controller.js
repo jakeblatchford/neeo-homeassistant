@@ -51,10 +51,10 @@ module.exports.onButtonPressed = (action, deviceId) => {
   switch (action) {
     case MACRO_POWER_ON:
       debug(`Powering on ${deviceId}`);
-      return setBrightnessState(deviceId, true);
+      return setPowerState(deviceId, true);
     case MACRO_POWER_OFF:
       debug(`Powering off ${deviceId}`);
-      return setBrightnessState(deviceId, false);
+      return setPowerState(deviceId, false);
     case MACRO_POWER_TOGGLE:
       debug(`Power toggle ${deviceId}`);
       return toggleDevice(deviceId);
