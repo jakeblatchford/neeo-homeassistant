@@ -10,6 +10,7 @@ const MACRO_POWER_ON = 'POWER ON';
 const MACRO_POWER_OFF = 'POWER OFF';
 const MACRO_POWER_TOGGLE = 'POWER_TOGGLE';
 const MACRO_ACTIVATE_SCENE = 'ACTIVATE_SCENE';
+const MACRO_ACTIVATE_SCRIPT = 'ACTIVATE_SCRIPT';
 
 let haService;
 let updateCallbackReference, markDeviceOn, markDeviceOff;
@@ -61,6 +62,9 @@ module.exports.onButtonPressed = (action, deviceId) => {
     case MACRO_ACTIVATE_SCENE:
       debug(`Activate scene ${deviceId}`);
       return activateScene(deviceId);
+    case MACRO_ACTIVATE_SCRIPT:
+        debug(`Activate script ${deviceId}`);
+        return activateScript(deviceId);
     default:
       debug(`Unsupported button: ${action} for ${deviceId}`);
       return Promise.resolve(false);
@@ -91,6 +95,15 @@ function toggleDevice(deviceId) {
  */
 function activateScene(deviceId) {
   return haService.callService(deviceId, 'scene', 'turn_on');
+}
+
+/**
+ * Activate script
+ *
+ * @param {*} deviceId
+ */
+function activateScript(deviceId) {
+    return haService.callService(deviceId, 'script', 'turn_on');
 }
 
 /**
@@ -154,6 +167,14 @@ module.exports.discoverSwitches = function () {
 module.exports.discoverScenes = function () {
   console.log("discover call - scene");
   return discover('scene');
+};
+
+/**
+ * Run a discovery of scripts
+ */
+module.exports.discoverScripts = function () {
+    console.log("discover call - script");
+    return discover('script');
 };
 
 /**
