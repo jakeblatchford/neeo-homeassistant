@@ -8,6 +8,7 @@ A Home Assistant integration for NEEO.
  - light
  - switch
  - scene
+ - script
 
 ## Setup
 

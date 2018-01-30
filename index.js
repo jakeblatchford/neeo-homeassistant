@@ -13,6 +13,7 @@ const powerSwitch = {
 
 const POWER_TOGGLE_BUTTON = { name: 'POWER_TOGGLE', label: 'Power Toggle' };
 const ACTIVATE_SCENE_BUTTON = { name: 'ACTIVATE_SCENE', label: 'Activate Scene'};
+const ACTIVATE_SCRIPT_BUTTON = { name: 'ACTIVATE_SCRIPT', label: 'Activate Script'};
 
 const haLightDevice = neeoapi.buildDevice('Light')
   .setManufacturer('Home Assistant')
@@ -58,13 +59,26 @@ const haLightDevice = neeoapi.buildDevice('Light')
   }, controller.discoverScenes)
   .registerInitialiseFunction(controller.initialise);
 
+  const haScriptDevice = neeoapi.buildDevice('Script')
+  .setManufacturer('Home Assistant')
+  .addAdditionalSearchToken('ha')
+  .addAdditionalSearchToken('dev')
+  .setType('ACCESSOIRE')
+  .addButton(ACTIVATE_SCRIPT_BUTTON)
+  .addButtonHandler(controller.onButtonPressed)
+  .enableDiscovery({
+      headerText: 'Discover Home Assistant Scripts',
+      description: 'Select the script to add on the next screen.'
+  }, controller.discoverScripts)
+  .registerInitialiseFunction(controller.initialise);
+
 function startSdkExample(brain) {
   console.log('- Start server');
   neeoapi.startServer({
     brain,
     port: 6336,
     name: 'homeassistant',
-    devices: [haLightDevice, haSwitchDevice, haSceneDevice]
+    devices: [haLightDevice, haSwitchDevice, haSceneDevice, haScriptDevice]
   })
     .then(() => {
       console.log('# READY! use the NEEO app to search for "Home Assistant".');

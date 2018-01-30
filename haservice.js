@@ -16,7 +16,7 @@ require('dotenv').load();
  *      light
  *      light|scene
  */
-const SUPPORTED_ENTITY_TYPES = 'light|switch|scene';
+const SUPPORTED_ENTITY_TYPES = 'light|switch|scene|script';
 
 /**
  * Home Assistant Service
