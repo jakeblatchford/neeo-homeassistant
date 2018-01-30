@@ -10,6 +10,10 @@ A Home Assistant integration for NEEO.
  - scene
  - script
 
+## Requirements
+
+ - Node.js 6.x or higher
+
 ## Setup
 
 Copy `.env.example` to `.env` and set the options. URL should not have a trailing slash.
