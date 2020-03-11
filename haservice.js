@@ -53,7 +53,7 @@ class HAService {
         entity_id: entity_id
       },
       json: true,
-      headers: { 'x-ha-access': process.env.HA_PASSWORD }
+      headers: { 'Authorization': 'Bearer ' + process.env.HA_PASSWORD, 'content-type': 'application/json'}
     };
 
     console.log("Using options", options);
@@ -87,7 +87,7 @@ class HAService {
       let options = {
         uri: process.env.HA_URL + '/api/states/' + entity_id,
         json: true,
-        headers: { 'x-ha-access': process.env.HA_PASSWORD }
+        headers: { 'Authorization': 'Bearer ' + process.env.HA_PASSWORD, 'content-type': 'application/json'}
       };
 
       return rp(options).then(function (response) {
@@ -115,7 +115,7 @@ class HAService {
     let options = {
       uri: process.env.HA_URL + '/api/states',
       json: true,
-      headers: { 'x-ha-access': process.env.HA_PASSWORD }
+      headers: { 'Authorization': 'Bearer ' + process.env.HA_PASSWORD, 'content-type': 'application/json'}
     };
 
     rp(options)
